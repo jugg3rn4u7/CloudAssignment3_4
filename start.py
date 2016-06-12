@@ -26,7 +26,6 @@ BASEPATH = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__) 
 app.config['DATA'] = os.path.join(BASEPATH,os.path.join('static','data'))
 app.config['PATH'] = "data"
-#app.config['PATH'] = os.path.join(app.config['DATA'], "inventory.data.gov/dataset/032e19b4-5a90-41dc-83ff-6e4cd234f565/resource/38625c3d-5388-4c16-a30f-d105432553a4/download")
 
 # DB Connection
 from dbsettings import connection_properties
@@ -135,6 +134,21 @@ try:
 except Exception as e:
     print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
     print("Exception : %s" % e)
+
+@app.route("/")
+def ShowDefault():
+	return app.send_static_file('index.html')
+
+@app.route("/query")
+def RunQuery():
+	try:
+		print(request)
+		conn = pymysql.connect(**connection_properties)
+		cur = conn.cursor()
+		#cur.execute()
+	except Exception as e:
+		print("Exception at line: {}".format(sys.exc_info()[-1].tb_lineno))
+		print("Exception: %s" % e)
          
 port = os.getenv('PORT', '8000')
 if __name__ == "__main__":
