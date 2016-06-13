@@ -122,7 +122,7 @@ try:
                      (filename, ext) = f[i].split(".")
                 
                 startTime = int(round(time.time() * 1000))
-                os.system("mysqlimport --ignore-lines=1 \\"+
+                os.system("sudo mysqlimport --ignore-lines=1 \\"+
                           "--fields-terminated-by=, \\"
                           "--local -u root \\"+
                           "-proot %s \\" % DB_NAME +
