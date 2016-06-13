@@ -160,17 +160,21 @@ def RunQuery():
          query = request.form["query"]
          times = request.form["times"]
          cached = request.form["cached"]
-         print("Cached : ", cached.encode("utf-8"))
+         print("Cached : ", cached.encode("utf-8") == "true")
+         print("Query : ", query)
          conn = pymysql.connect(**connection_properties)
          cur = conn.cursor()
-         if cached == "true":
-            cur.execute("insert into `%s`" % DB_NAME + ".`cached_queries`(query) values('%s" % query.encode("utf-8") +"')")
+         if cached.encode("utf-8") == "true":
+            q = "insert into `%s`" % DB_NAME + ".`cached_queries`(query) values('%s" % query.encode("utf-8") +"')"
+            print("Inside : ", q)
+            cur.execute(q)
+            conn.commit()
          cur.execute("select max(id) from `%s`" % DB_NAME + ".`cached_queries`")
          row = cur.fetchone()
          _id = row[0]
          for i in range(len(times)):
             cur.execute(query)
-         if cached is "true":
+         if cached.encode("utf-8") is "true":
             cur.execute(query)
             rows = cur.fetchall()
             memc.set('{}'.format(_id), rows, 60)
@@ -209,20 +213,24 @@ def RunCachedQuery():
 @app.route("/getQueries")
 def GetCachedQueries():
         try:
+                conn = pymysql.connect(**connection_properties)
                 cur = conn.cursor()
-                cur.execute("select count(*) from `%s`.`cached_queries`" % DB_NAME)                
-                row = cur.fetchone()
-                count = row[0]
-                if count is not 0:
-                    cur.execute("select * from `%s`.`cached_queries`" % DB_NAME)
-                    rows = cur.fetchall()
+                cur.execute("select * from `cloud_assignments`.`cached_queries`")
+                rows_count = cur.rowcount
                 rowarray_list = []
-                for i in range(len(rows)):
-                    t = (rows[i][0], rows[i][1])
-                    rowarray_list(t)
-                j = json.dumps(rowarray_list)
-                cur.close()
-                return jsonify(results=j)
+                if rows_count > 0:
+                    rows = cur.fetchall()
+                    for i in range(len(rows)):
+                        t = (rows[i][0], rows[i][1])
+                        rowarray_list.append(t)
+                    print(rowarray_list)
+                    j = json.dumps(rowarray_list)
+                    cur.close()
+                    conn.close()
+                    return j
+                else:
+                    j = []
+                    return jsonify(results=j)
         except Exception as e:
                 print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
                 print("Exception : %s" % e)

@@ -31,12 +31,13 @@ $(document).ready(function () {
 
 	  	var callback = function (response) {
 	  		if( response ) {
-	  			console.log("Response: ");
+	  			console.log("GET QUERIES Response: ");
 	  			console.log(response);
-	  			$("#list-of-queries").append("");
-	  			var queries = response.results;
-	  			for (var i = 0; i < queries.length; i++) {
-	  			 	$("#list-of-queries").append('<tr><th scope="row">'+(i+1)+'</th><td>'+ queries[i][1] +'</td><td><input type="text" value=""></input></td><td><button data-query="'+ (i+1) +'" class="btn btn-info" type="button" id="'+ queries[i][0] +'">Run Query</button></td></tr>');
+	  			$("#list-of-queries").html("");
+	  			var json_data = response;
+	  			console.log(json_data);
+	  			for (var i = 0; i < json_data.length; i++) {
+	  			 	$("#list-of-queries").append('<tr><th scope="row">'+(i+1)+'</th><td>'+ json_data[i][1] +'</td><td><input type="text" value="" style="width: 50%;"></input></td><td><button data-query="'+ (i+1) +'" class="btn btn-info" type="button" id="'+ json_data[i][0] +'">Get Cache</button></td></tr>');
 	  			}
 	  		} 
 	  	};
@@ -53,7 +54,7 @@ $(document).ready(function () {
 
 	var runCachedQuery = function (id, times) {
 
-		var url = '/query?_ts=' + (new Date()).getTime();
+		var url = '/cquery?_ts=' + (new Date()).getTime();
 
 	  	var callback = function (response) {
 	  		if( response ) {
@@ -77,11 +78,12 @@ $(document).ready(function () {
 	}
 
 	$("#run_query").on("click", getData);
-	$("#refresh-list").on("click", getData);
+	$("#refresh-list").on("click", getQueries);
 
 	$(document).delegate("[data-query]", "click", function(e) {
 		var id = $(this).attr("id");
-		var times = $( $(this).parent() ).find("input").val();
+		var times = $( $(this).parent() ).parent().find("input").val();
+		console.log("Cached Query params: ", id, times);
 		runCachedQuery(id, times);
 	});
 
