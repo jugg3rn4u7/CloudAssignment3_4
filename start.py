@@ -45,7 +45,7 @@ try:
 	for i in range(len(attributes)):
 		attr_string += clean_str( attributes[i] ) + " varchar(100),"
 	attr_string = attr_string[:-1]
-	print("Attr str : ", attr_string)
+	#print("Attr str : ", attr_string)
 	statement += attr_string
 	statement += ");"
 	return statement
@@ -65,11 +65,11 @@ try:
                 	with open(filepath, 'rb') as f:
                     		content = [x.strip('\n') for x in f.readlines()]
 			columns = content[0].split(",")                    		
-			print("columns: ", columns)
+			#print("columns: ", columns)
 			statements.append( create_statement(filename, columns) )		
-		for i in range(len(statements)):
-			print("Table {}".format(i))
-			print(statements[i])
+		#for i in range(len(statements)):
+			#print("Table {}".format(i))
+			#print(statements[i])
 		return statements
 
 	except Exception as e:
@@ -104,31 +104,34 @@ try:
 
     def load_data():
         try:
-		cur = conn.cursor()
-		f = []
+        		cur = conn.cursor()
+        		f = []
                 for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
                         f.extend(filenames)
                         break
                 for i in range(len(f)):
                         filepath = os.path.join( app.config['DATA'], f[i] )
                         (filename, ext) = f[i].split(".")
-			cur.execute("LOAD DATA LOCAL INFILE '%s'" % filepath +
-				    "INTO TABLE %s" % ("`"+ DB_NAME  +"`.`" + filename +"`") + 
-				    "FIELDS TERMINATED BY ','" 
-				    "ENCLOSED BY '\"'" +
-				    "LINES TERMINATED BY '\n'" +
-			 	    "IGNORE 1 ROWS")
-			conn.commit()
+    			cur.execute("LOAD DATA LOCAL INFILE '%s'" % filepath +
+    				    "INTO TABLE %s" % ("`"+ DB_NAME  +"`.`" + filename +"`") + 
+    				    "FIELDS TERMINATED BY ','" 
+    				    "ENCLOSED BY '\"'" +
+    				    "LINES TERMINATED BY '\n'" +
+    			 	    "IGNORE 1 ROWS")
+    			conn.commit()
                 cur.close()
         except Exception as e:
             print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
             print("Exception : %s" % e)
 
+    startTime = int(round(time.time() * 1000))
     create_database()
     statements = read_header()
     for i in range(len(statements)):
 	create_table(statements[i])
     #load_data()
+    endTime = int(round(time.time() * 1000))
+    print("Time taken to load the data into MySQL : ", endTime - startTime,'ms')
     conn.close()
 
 except Exception as e:
@@ -139,16 +142,28 @@ except Exception as e:
 def ShowDefault():
 	return app.send_static_file('index.html')
 
-@app.route("/query")
+@app.route("/query", methods=['POST'])
 def RunQuery():
 	try:
-		print(request)
-		conn = pymysql.connect(**connection_properties)
-		cur = conn.cursor()
-		#cur.execute()
+         startTime = int(round(time.time() * 1000))
+         query = request.form["query"]
+         times = request.form["times"]
+         print(query.encode("utf-8"))
+         conn = pymysql.connect(**connection_properties)
+         cur = conn.cursor()
+         for i in range(len(times)):
+            cur.execute(query)
+         cur.close()
+         conn.close()
+         endTime = int(round(time.time() * 1000))
+         print("Time to execute the query : ", endTime - startTime,'ms')
+         data = { "time_elapsed": (endTime - startTime) }
+         return jsonify(results=data)
 	except Exception as e:
 		print("Exception at line: {}".format(sys.exc_info()[-1].tb_lineno))
 		print("Exception: %s" % e)
+        data = { "time_elapsed": "Check your query. Error in measuring time" }
+        return jsonify(results=data)
          
 port = os.getenv('PORT', '8000')
 if __name__ == "__main__":

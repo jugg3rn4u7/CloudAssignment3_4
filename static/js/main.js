@@ -8,11 +8,13 @@ $(document).ready(function () {
 	  		if( response ) {
 	  			console.log("Response: ");
 	  			console.log(response);
+	  			var time_elapsed = response.results.time_elapsed;
+	  			$("#time_elapsed").html(time_elapsed + " milliseconds");
 	  		} 
 	  	};
 
 	  	var dataType = 'JSON';
-		var data = { query: $("#full_query").text(), times: $("#times").val() };
+		var data = { query: $("#query").val(), times: $("#times").val() };
 		$.ajax({
 		  type: "POST",
 		  url: url,

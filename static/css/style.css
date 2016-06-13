@@ -23,3 +23,7 @@ body,html {
 	height: 100%;
 	margin: 0 auto;
 }
+
+.query_area {
+	width: 100%;
+}
