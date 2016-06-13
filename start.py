@@ -113,6 +113,28 @@ try:
 
     def load_data():
         try:
+                f = []
+                for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
+                     f.extend(filenames)
+                     break
+                for i in range(len(f)):
+                     filepath = os.path.join( app.config['DATA'], f[i] )
+                     (filename, ext) = f[i].split(".")
+                
+                startTime = int(round(time.time() * 1000))
+                os.system("mysqlimport --ignore-lines=1 \\"+
+                          "--fields-terminated-by=, \\"
+                          "--local -u root \\"+
+                          "-proot %s \\" % DB_NAME +
+                          "%s" % filepath)   
+                endTime = int(round(time.time() * 1000))
+                print("Time taken to import file : ", endTime - startTime,'ms') 
+        except Exception as e:
+                print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+                print("Exception : %s" % e)
+
+    def load_data1():
+        try:
                 cur = conn.cursor()
                 f = []
                 for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
@@ -140,7 +162,7 @@ try:
     for i in range(len(statements)):
 	   create_table(statements[i])
     create_cache_query_table()
-    #load_data()
+    load_data()
     endTime = int(round(time.time() * 1000))
     print("Time taken to load the data into MySQL : ", endTime - startTime,'ms')
     conn.close()
@@ -198,8 +220,8 @@ def RunCachedQuery():
          times = request.form["times"]
          print(_id.encode("utf-8"))
          print "Loaded data from memcached"
-         for i in range(times):
-            cached_data = memc.get("{}".format(_id))
+         for i in range(times.encode("utf-8")):
+            cached_data = memc.get("{}".format(_id.encode("utf-8")))
          endTime = int(round(time.time() * 1000))
          print("Time to execute get results from cache : ", endTime - startTime,'ms')
          data = { "time_elapsed": (endTime - startTime) }

@@ -37,7 +37,7 @@ $(document).ready(function () {
 	  			var json_data = response;
 	  			console.log(json_data);
 	  			for (var i = 0; i < json_data.length; i++) {
-	  			 	$("#list-of-queries").append('<tr><th scope="row">'+(i+1)+'</th><td>'+ json_data[i][1] +'</td><td><input type="text" value="" style="width: 50%;"></input></td><td><button data-query="'+ (i+1) +'" class="btn btn-info" type="button" id="'+ json_data[i][0] +'">Get Cache</button></td></tr>');
+	  			 	$("#list-of-queries").append('<tr><th scope="row">'+(i+1)+'</th><td>'+ json_data[i][1] +'</td><td><input type="text" value="1" style="width: 50%;"></input></td><td><button data-query="'+ (i+1) +'" class="btn btn-info" type="button" id="'+ json_data[i][0] +'">Get Cache</button></td></tr>');
 	  			}
 	  		} 
 	  	};
