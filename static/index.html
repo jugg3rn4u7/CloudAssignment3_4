@@ -35,6 +35,11 @@
                     			<label for="times">Times : </label>
                     			<input id="times" name="times" class="query_area"></input>
                   		</div>
+                      <div class="checkbox">
+                        <label>
+                          <input type="checkbox" id="cache_query"> Cache this query result
+                        </label>
+                      </div>
                   		<div class="form-group">
                     			<button type="button" class="btn btn-primary" id="run_query">Run Query</button>
                   		</div>
@@ -52,6 +57,22 @@
                       <div id="time_elapsed"></div>
                     </div>
                   </form>                 
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading"><b>Cached Queries</b>&nbsp;&nbsp;<button type="button" class="btn btn-info" id="refresh-list">Refresh</button></div>
+              <div class="panel-body">
+                  <table class="table table-striped">
+                    <thead> 
+                      <tr> 
+                        <th>#</th> 
+                        <th>Query</th> 
+                        <th>Times</th>
+                        <th>Opeartion</th>
+                      </tr>
+                    </thead>
+                    <tbody id="list-of-queries"></tbody>
+                  </table>                
               </div>
             </div>
           </div> <!-- /col-lg-6 -->

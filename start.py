@@ -16,6 +16,7 @@ import os
 import sys
 import time
 import json
+import memcache
 from os import walk
 from flask import Flask, jsonify, request, redirect
 from werkzeug import secure_filename
@@ -26,71 +27,79 @@ BASEPATH = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__) 
 app.config['DATA'] = os.path.join(BASEPATH,os.path.join('static','data'))
 app.config['PATH'] = "data"
+DB_NAME = 'cloud_assignments'
 
 # DB Connection
 from dbsettings import connection_properties
 print(connection_properties)
 print(app.config['PATH'])
 
+memc = memcache.Client(['127.0.0.1:11211'], debug=1)
+
 try:
-	
-    DB_NAME = 'cloud_assignments'
 
     def clean_str(string):
-	return string.strip("\r") 
+	    return string.strip("\r") 
 	
     def create_statement(table_name, attributes):
-	statement = "create table `%s`" % DB_NAME + ".`%s`" % ( table_name ) + "("
+    	statement = "create table `%s`" % DB_NAME + ".`%s`" % ( table_name ) + "("
         attr_string = "" 
-	for i in range(len(attributes)):
-		attr_string += clean_str( attributes[i] ) + " varchar(100),"
-	attr_string = attr_string[:-1]
-	#print("Attr str : ", attr_string)
-	statement += attr_string
-	statement += ");"
-	return statement
+    	for i in range(len(attributes)):
+    		attr_string += clean_str( attributes[i] ) + " varchar(100),"
+    	attr_string = attr_string[:-1]
+    	#print("Attr str : ", attr_string)
+    	statement += attr_string
+    	statement += ");"
+    	return statement
 
     def read_header():
-	try:
-		f = []
-		statements = []
-		for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
-            		f.extend(filenames)
-            		break
-		print("Files : ", f)
-		for i in range(len(f)):
-			filepath = os.path.join( app.config['PATH'], f[i] )
-			(filename, ext) = f[i].split(".")
-                	content = []
-                	with open(filepath, 'rb') as f:
-                    		content = [x.strip('\n') for x in f.readlines()]
-			columns = content[0].split(",")                    		
-			#print("columns: ", columns)
-			statements.append( create_statement(filename, columns) )		
-		#for i in range(len(statements)):
-			#print("Table {}".format(i))
-			#print(statements[i])
-		return statements
+    	try:
+        		f = []
+        		statements = []
+        		for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
+                    		f.extend(filenames)
+                    		break
+        		print("Files : ", f)
+        		for i in range(len(f)):
+        			filepath = os.path.join( app.config['PATH'], f[i] )
+        			(filename, ext) = f[i].split(".")
+                        	content = []
+                        	with open(filepath, 'rb') as f:
+                            		content = [x.strip('\n') for x in f.readlines()]
+        			columns = content[0].split(",")                    		
+        			#print("columns: ", columns)
+        			statements.append( create_statement(filename, columns) )		
+        		#for i in range(len(statements)):
+        			#print("Table {}".format(i))
+        			#print(statements[i])
+        		return statements
 
-	except Exception as e:
-	    print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
-            print("Exception : %s" % e)
+    	except Exception as e:
+    	       print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+               print("Exception : %s" % e)
 
     conn = pymysql.connect(**connection_properties)
 
     def create_database():
         try:
+             cur = conn.cursor()
+             cur.execute("DROP DATABASE IF EXISTS `%s`" % DB_NAME)
+             cur.execute("CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARACTER SET 'utf8'".format(DB_NAME))
+             conn.commit()
+             cur.close()
+        except Exception as e:
+                print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+                print("Exception : %s" % e)
+
+    def create_cache_query_table():
+        try:
                 cur = conn.cursor()
-		cur.execute(
-                    "DROP DATABASE IF EXISTS {}".format(DB_NAME))
-                cur.execute(
-                    "CREATE DATABASE IF NOT EXISTS {} DEFAULT CHARACTER SET 'utf8'".format(DB_NAME))
+                cur.execute( "CREATE TABLE `%s" % DB_NAME + "`.`CACHED_QUERIES`(id int(11) AUTO_INCREMENT, query varchar(1000), primary key(id))" )
                 conn.commit()
                 cur.close()
-
         except Exception as e:
-            print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
-            print("Exception : %s" % e)
+                print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+                print("Exception : %s" % e)
 
     def create_table(statement):
         try:
@@ -99,36 +108,38 @@ try:
                 conn.commit()
                 cur.close()
         except Exception as e:
-            print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
-            print("Exception : %s" % e)
+                print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+                print("Exception : %s" % e)
 
     def load_data():
         try:
-        		cur = conn.cursor()
-        		f = []
+                cur = conn.cursor()
+                f = []
                 for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
-                        f.extend(filenames)
-                        break
+                     f.extend(filenames)
+                     break
                 for i in range(len(f)):
-                        filepath = os.path.join( app.config['DATA'], f[i] )
-                        (filename, ext) = f[i].split(".")
-    			cur.execute("LOAD DATA LOCAL INFILE '%s'" % filepath +
-    				    "INTO TABLE %s" % ("`"+ DB_NAME  +"`.`" + filename +"`") + 
-    				    "FIELDS TERMINATED BY ','" 
-    				    "ENCLOSED BY '\"'" +
-    				    "LINES TERMINATED BY '\n'" +
-    			 	    "IGNORE 1 ROWS")
-    			conn.commit()
+                     filepath = os.path.join( app.config['DATA'], f[i] )
+                     (filename, ext) = f[i].split(".")
+    			
+                cur.execute("LOAD DATA LOCAL INFILE '%s'" % filepath +
+       	                  "INTO TABLE %s" % ("`"+ DB_NAME  +"`.`" + filename +"`") + 
+                            "FIELDS TERMINATED BY ','" 
+                       	  "ENCLOSED BY '\"'" +
+       	                  "LINES TERMINATED BY '\n'" +
+                      	  "IGNORE 1 ROWS")
+                conn.commit()
                 cur.close()
         except Exception as e:
-            print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
-            print("Exception : %s" % e)
+                print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+                print("Exception : %s" % e)
 
     startTime = int(round(time.time() * 1000))
     create_database()
     statements = read_header()
     for i in range(len(statements)):
-	create_table(statements[i])
+	   create_table(statements[i])
+    create_cache_query_table()
     #load_data()
     endTime = int(round(time.time() * 1000))
     print("Time taken to load the data into MySQL : ", endTime - startTime,'ms')
@@ -148,11 +159,21 @@ def RunQuery():
          startTime = int(round(time.time() * 1000))
          query = request.form["query"]
          times = request.form["times"]
-         print(query.encode("utf-8"))
+         cached = request.form["cached"]
+         print("Cached : ", cached.encode("utf-8"))
          conn = pymysql.connect(**connection_properties)
          cur = conn.cursor()
+         if cached == "true":
+            cur.execute("insert into `%s`" % DB_NAME + ".`cached_queries`(query) values('%s" % query.encode("utf-8") +"')")
+         cur.execute("select max(id) from `%s`" % DB_NAME + ".`cached_queries`")
+         row = cur.fetchone()
+         _id = row[0]
          for i in range(len(times)):
             cur.execute(query)
+         if cached is "true":
+            cur.execute(query)
+            rows = cur.fetchall()
+            memc.set('{}'.format(_id), rows, 60)
          cur.close()
          conn.close()
          endTime = int(round(time.time() * 1000))
@@ -164,6 +185,49 @@ def RunQuery():
 		print("Exception: %s" % e)
         data = { "time_elapsed": "Check your query. Error in measuring time" }
         return jsonify(results=data)
+
+@app.route("/cquery", methods=['POST'])
+def RunCachedQuery():
+    try:
+         startTime = int(round(time.time() * 1000))
+         _id = request.form["id"]
+         times = request.form["times"]
+         print(_id.encode("utf-8"))
+         print "Loaded data from memcached"
+         for i in range(times):
+            cached_data = memc.get("{}".format(_id))
+         endTime = int(round(time.time() * 1000))
+         print("Time to execute get results from cache : ", endTime - startTime,'ms')
+         data = { "time_elapsed": (endTime - startTime) }
+         return jsonify(results=data)
+    except Exception as e:
+        print("Exception at line: {}".format(sys.exc_info()[-1].tb_lineno))
+        print("Exception: %s" % e)
+        data = { "time_elapsed": "Check your query. Error in measuring time" }
+        return jsonify(results=data)
+
+@app.route("/getQueries")
+def GetCachedQueries():
+        try:
+                cur = conn.cursor()
+                cur.execute("select count(*) from `%s`.`cached_queries`" % DB_NAME)                
+                row = cur.fetchone()
+                count = row[0]
+                if count is not 0:
+                    cur.execute("select * from `%s`.`cached_queries`" % DB_NAME)
+                    rows = cur.fetchall()
+                rowarray_list = []
+                for i in range(len(rows)):
+                    t = (rows[i][0], rows[i][1])
+                    rowarray_list(t)
+                j = json.dumps(rowarray_list)
+                cur.close()
+                return jsonify(results=j)
+        except Exception as e:
+                print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+                print("Exception : %s" % e)
+                j = []
+                return jsonify(results=j)
          
 port = os.getenv('PORT', '8000')
 if __name__ == "__main__":
