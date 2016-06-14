@@ -158,8 +158,7 @@ $(document).ready(function () {
 		  url: url,
 		  success: callback,
 		  failure: callback,
-		  dataType: dataType,
-		  data: data
+		  dataType: dataType
 		});
 	});
 
