@@ -195,7 +195,7 @@ def RunQuery():
          cur.execute(q)
          row = cur.fetchone()
          _id = row[0]
-         for i in range(len(times)):
+         for i in range(int(times.encode("utf-8"))):
             cur.execute(query)
          if cached.encode("utf-8") is "true":
             cur.execute(query)
@@ -242,7 +242,7 @@ def RunInsertQuery():
          print("Query : ", query)
          conn = pymysql.connect(**connection_properties)
          cur = conn.cursor()
-         for i in range(len(times)):
+         for i in range(int(times.encode("utf-8"))):
             cur.execute(query)
             conn.commit()
          cur.close()
