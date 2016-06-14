@@ -125,6 +125,9 @@ try:
                      print("command : ", command)
                      os.system(command)   
                      endTime = int(round(time.time() * 1000))
+                     cur = conn.cursor()
+                     conn.commit()
+                     cur.close()
                      print("Time taken to import file : ", endTime - startTime,'ms') 
         except Exception as e:
                 print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
@@ -234,7 +237,7 @@ def GetCachedQueries():
         try:
                 conn = pymysql.connect(**connection_properties)
                 cur = conn.cursor()
-                cur.execute("select * from `cloud_assignments`.`cached_queries`")
+                cur.execute("select * from `%s`.`cached_queries`", DB_NAME)
                 rows_count = cur.rowcount
                 rowarray_list = []
                 if rows_count > 0:
