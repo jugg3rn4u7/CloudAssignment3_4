@@ -22,6 +22,7 @@ from flask import Flask, jsonify, request, redirect
 from werkzeug import secure_filename
 import pymysql.cursors
 
+VALID_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif','doc','docx','xls', 'csv'])
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__) 
@@ -285,6 +286,22 @@ def GetCachedQueries():
                 print("Exception : %s" % e)
                 j = []
                 return jsonify(results=j)
+
+@app.route('/upload_file', methods=['GET', 'POST'])
+def UploadFile():
+    try:
+        startTime = int(round(time.time() * 1000))
+        if request.method == 'POST':
+            local_file = request.files['generic_file']
+            filename = secure_filename(local_file.filename)
+            local_file.save(os.path.join(app.config['DATA'], filename))
+        endTime = int(round(time.time() * 1000))
+        print("Time to upload the file : ", endTime - startTime,'ms')
+        return app.send_static_file('index.html')            
+    except Exception as e:
+        print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
+        print e
+        return app.send_static_file('index.html')
          
 port = os.getenv('PORT', '8000')
 if __name__ == "__main__":
