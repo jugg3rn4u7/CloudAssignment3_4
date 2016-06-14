@@ -45,7 +45,7 @@ def create_schema():
     	
         def create_statement(table_name, attributes):
         	statement = "create table `%s`" % DB_NAME + ".`%s`" % ( table_name ) + "("
-            attr_string = "" 
+	        attr_string = "" 
         	for i in range(len(attributes)):
         		attr_string += clean_str( attributes[i] ) + " varchar(100),"
         	attr_string = attr_string[:-1]
@@ -78,7 +78,7 @@ def create_schema():
 
         	except Exception as e:
         	       print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
-                   print("Exception : %s" % e)
+                       print("Exception : %s" % e)
 
         conn = pymysql.connect(**connection_properties)
 
