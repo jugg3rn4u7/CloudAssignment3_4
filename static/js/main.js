@@ -139,5 +139,29 @@ $(document).ready(function () {
 		runCachedQuery(id, times);
 	});
 
+	$(document).delegate("#create_schema", "click", function(e) {
+		var callback = function (response) {
+	  		if( response ) {
+	  			console.log("Response: ");
+	  			console.log(response);
+	  			var result = response.results
+	  			if(result) {
+	  				alert("Schema created");
+	  			} else {
+	  				alert("Oops ! Schema not created");
+	  			}
+	  		} 
+	  	};
+		var url = "/create";
+		$.ajax({
+		  type: "GET",
+		  url: url,
+		  success: callback,
+		  failure: callback,
+		  dataType: dataType,
+		  data: data
+		});
+	});
+
 	getQueries()
 });
