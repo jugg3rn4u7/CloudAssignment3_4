@@ -283,6 +283,8 @@ def UploadFile():
             local_file = request.files['generic_file']
             filename = secure_filename(local_file.filename)
             local_file.save(os.path.join(app.config['DATA'], filename))
+            issue_permissions = "sudo chmod -R 777 %s" % os.path.join(app.config['DATA'], filename)
+            os.system(issue_permissions)
         endTime = int(round(time.time() * 1000))
         print("Time to upload the file : ", endTime - startTime,'ms')
         return app.send_static_file('index.html')            
