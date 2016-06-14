@@ -22,7 +22,7 @@ $(document).ready(function () {
 
 	var getData = function () {
 
-		var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
+		var selected_option = $('input[name=sql_query]:radio:checked').val();
 
 		if(selected_option == "1") {
 
