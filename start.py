@@ -191,7 +191,7 @@ def RunQuery():
             print("Inside : ", q)
             cur.execute(q)
             conn.commit()
-	 q = "SELECT MAX(id) FROM `%s`.`CACHED_QUERIES`" % DB_NAME
+	     q = "SELECT MAX(id) FROM `%s`.`CACHED_QUERIES`" % DB_NAME
          cur.execute(q)
          row = cur.fetchone()
          _id = row[0]
@@ -233,13 +233,37 @@ def RunCachedQuery():
         data = { "time_elapsed": "Check your query. Error in measuring time" }
         return jsonify(results=data)
 
+@app.route("/insert_query", methods=['POST'])
+def RunInsertQuery():
+    try:
+         startTime = int(round(time.time() * 1000))
+         query = request.form["query"]
+         times = request.form["times"]
+         print("Query : ", query)
+         conn = pymysql.connect(**connection_properties)
+         cur = conn.cursor()
+         for i in range(len(times)):
+            cur.execute(query)
+            conn.commit()
+         cur.close()
+         conn.close()
+         endTime = int(round(time.time() * 1000))
+         print("Time to execute the query : ", endTime - startTime,'ms')
+         data = { "time_elapsed": (endTime - startTime) }
+         return jsonify(results=data)
+    except Exception as e:
+        print("Exception at line: {}".format(sys.exc_info()[-1].tb_lineno))
+        print("Exception: %s" % e)
+        data = { "time_elapsed": "Check your query. Error in measuring time" }
+        return jsonify(results=data)
+
 @app.route("/getQueries")
 def GetCachedQueries():
         try:
                 conn = pymysql.connect(**connection_properties)
                 cur = conn.cursor()
-		q = "SELECT * FROM `%s`.`CACHED_QUERIES`" % DB_NAME
-		print(q)
+        		q = "SELECT * FROM `%s`.`CACHED_QUERIES`" % DB_NAME
+        		print(q)
                 cur.execute(q)
                 rows_count = cur.rowcount
                 rowarray_list = []

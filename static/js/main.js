@@ -2,27 +2,70 @@ $(document).ready(function () {
 
 	var getData = function () {
 
-		var url = '/query?_ts=' + (new Date()).getTime();
+		var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
 
-	  	var callback = function (response) {
-	  		if( response ) {
-	  			console.log("Response: ");
-	  			console.log(response);
-	  			var time_elapsed = response.results.time_elapsed;
-	  			$("#time_elapsed").html(time_elapsed + " milliseconds");
-	  		} 
-	  	};
+		if(selected_option == "1") {
 
-	  	var dataType = 'JSON';
-		var data = { query: $("#query").val(), times: $("#times").val(), cached: $("#cache_query").is(":checked") };
-		$.ajax({
-		  type: "POST",
-		  url: url,
-		  success: callback,
-		  failure: callback,
-		  dataType: dataType,
-		  data: data
-		});
+			var isDisabled = $("#cache_query").is('[disabled=disabled]');
+
+			if(isDisabled) {
+				$("#cache_query").removeAttr( "disabled" );
+			}
+
+			var url = '/query?_ts=' + (new Date()).getTime();
+
+		  	var callback = function (response) {
+		  		if( response ) {
+		  			console.log("Response: ");
+		  			console.log(response);
+		  			var time_elapsed = response.results.time_elapsed;
+		  			$("#time_elapsed").html(time_elapsed + " milliseconds");
+		  		} 
+		  	};
+
+		  	var dataType = 'JSON';
+			var data = { query: $("#query").val(), times: $("#times").val(), cached: $("#cache_query").is(":checked") };
+			$.ajax({
+			  type: "POST",
+			  url: url,
+			  success: callback,
+			  failure: callback,
+			  dataType: dataType,
+			  data: data
+			});
+
+		} else {
+
+			var isDisabled = $("#cache_query").is('[disabled=disabled]');
+
+			if(!isDisabled) {
+				$("#cache_query").attr( "disabled", "disabled" );
+			}
+
+			var url = '/insert_query?_ts=' + (new Date()).getTime();
+
+		  	var callback = function (response) {
+		  		if( response ) {
+		  			console.log("Response: ");
+		  			console.log(response);
+		  			var time_elapsed = response.results.time_elapsed;
+		  			$("#time_elapsed").html(time_elapsed + " milliseconds");
+		  		} 
+		  	};
+
+		  	var dataType = 'JSON';
+			var data = { query: $("#query").val(), times: $("#times").val() };
+			$.ajax({
+			  type: "POST",
+			  url: url,
+			  success: callback,
+			  failure: callback,
+			  dataType: dataType,
+			  data: data
+			});
+
+		}
+		
 	}
 
 	var getQueries = function () {
