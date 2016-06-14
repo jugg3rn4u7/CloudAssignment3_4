@@ -157,8 +157,7 @@ $(document).ready(function () {
 		  type: "GET",
 		  url: url,
 		  success: callback,
-		  failure: callback,
-		  dataType: dataType
+		  failure: callback
 		});
 	});
 
