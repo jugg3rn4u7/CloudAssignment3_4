@@ -120,15 +120,16 @@ try:
                 for i in range(len(f)):
                      filepath = os.path.join( app.config['DATA'], f[i] )
                      (filename, ext) = f[i].split(".")
-                
-                startTime = int(round(time.time() * 1000))
-                os.system("sudo mysqlimport --ignore-lines=1 \\"+
-                          "--fields-terminated-by=, \\"
-                          "--local -u root \\"+
-                          "-proot %s \\" % DB_NAME +
-                          "%s" % filepath)   
-                endTime = int(round(time.time() * 1000))
-                print("Time taken to import file : ", endTime - startTime,'ms') 
+                     startTime = int(round(time.time() * 1000))
+                     command =    "sudo mysqlimport --ignore-lines=1 \\"+
+                                  "--fields-terminated-by=, \\"
+                                  "--local -u root \\"+
+                                  "-p root %s \\" % DB_NAME +
+                                  "%s" % filepath
+                     print("command : ", command)
+                     os.system(command)   
+                     endTime = int(round(time.time() * 1000))
+                     print("Time taken to import file : ", endTime - startTime,'ms') 
         except Exception as e:
                 print("Exception at line number: {}".format(sys.exc_info()[-1].tb_lineno))
                 print("Exception : %s" % e)
