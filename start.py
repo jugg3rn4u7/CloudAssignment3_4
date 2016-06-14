@@ -187,11 +187,12 @@ def RunQuery():
          conn = pymysql.connect(**connection_properties)
          cur = conn.cursor()
          if cached.encode("utf-8") == "true":
-            q = "insert into `%s`" % DB_NAME + ".`cached_queries`(query) values('%s" % query.encode("utf-8") +"')"
+            q = "INSERT INTO `%s`.`CACHED_QUERIES`(query) VALUES('%s')" % (DB_NAME, query.encode("utf-8"))
             print("Inside : ", q)
             cur.execute(q)
             conn.commit()
-         cur.execute("select max(id) from `%s`" % DB_NAME + ".`cached_queries`")
+	 q = "SELECT MAX(id) FROM `%s`.`CACHED_QUERIES`" % DB_NAME
+         cur.execute(q)
          row = cur.fetchone()
          _id = row[0]
          for i in range(len(times)):
@@ -220,7 +221,7 @@ def RunCachedQuery():
          times = request.form["times"]
          print(_id.encode("utf-8"))
          print "Loaded data from memcached"
-         for i in range(times.encode("utf-8")):
+         for i in range(int(times.encode("utf-8"))):
             cached_data = memc.get("{}".format(_id.encode("utf-8")))
          endTime = int(round(time.time() * 1000))
          print("Time to execute get results from cache : ", endTime - startTime,'ms')
@@ -237,7 +238,9 @@ def GetCachedQueries():
         try:
                 conn = pymysql.connect(**connection_properties)
                 cur = conn.cursor()
-                cur.execute("select * from `%s`.`cached_queries`", DB_NAME)
+		q = "SELECT * FROM `%s`.`CACHED_QUERIES`" % DB_NAME
+		print(q)
+                cur.execute(q)
                 rows_count = cur.rowcount
                 rowarray_list = []
                 if rows_count > 0:
