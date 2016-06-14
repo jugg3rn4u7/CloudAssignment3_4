@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
 	$("input[name='sql_query']").change(function(){
-	    var selected_option = $('input[name=sql_query]:radio:not(:checked)').val("1");
+	    var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
 	    var isDisabled = $("#cache_query").is('[disabled=disabled]');
 
 	    console.log("selected_option : ", selected_option);
