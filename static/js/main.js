@@ -4,7 +4,9 @@ $(document).ready(function () {
 	    var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
 	    var isDisabled = $("#cache_query").is('[disabled=disabled]');
 
-	    if(selected_option == "1") {
+	    console.log("selected_option : ", selected_option);
+		
+		if(selected_option == "1") {
 
 			if(isDisabled) {
 				$("#cache_query").removeAttr( "disabled" );

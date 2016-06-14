@@ -191,7 +191,7 @@ def RunQuery():
             print("Inside : ", q)
             cur.execute(q)
             conn.commit()
-	     q = "SELECT MAX(id) FROM `%s`.`CACHED_QUERIES`" % DB_NAME
+	 q = "SELECT MAX(id) FROM `%s`.`CACHED_QUERIES`" % DB_NAME
          cur.execute(q)
          row = cur.fetchone()
          _id = row[0]
@@ -262,8 +262,8 @@ def GetCachedQueries():
         try:
                 conn = pymysql.connect(**connection_properties)
                 cur = conn.cursor()
-        		q = "SELECT * FROM `%s`.`CACHED_QUERIES`" % DB_NAME
-        		print(q)
+        	q = "SELECT * FROM `%s`.`CACHED_QUERIES`" % DB_NAME
+        	print(q)
                 cur.execute(q)
                 rows_count = cur.rowcount
                 rowarray_list = []
