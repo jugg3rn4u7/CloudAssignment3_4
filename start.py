@@ -25,7 +25,7 @@ import pymysql.cursors
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__) 
-app.config['DATA'] = os.path.join(BASEPATH,os.path.join('static','data'))
+app.config['DATA'] = os.path.join(BASEPATH,'data')
 app.config['PATH'] = "data"
 DB_NAME = 'cloud_assignments'
 
@@ -121,11 +121,7 @@ try:
                      filepath = os.path.join( app.config['DATA'], f[i] )
                      (filename, ext) = f[i].split(".")
                      startTime = int(round(time.time() * 1000))
-                     command =    "sudo mysqlimport --ignore-lines=1 \\"+
-                                  "--fields-terminated-by=, \\"
-                                  "--local -u root \\"+
-                                  "-p root %s \\" % DB_NAME +
-                                  "%s" % filepath
+                     command = "sudo mysqlimport --ignore-lines=1 --fields-terminated-by=, --local -u root -proot %s " % DB_NAME + "%s" % filepath
                      print("command : ", command)
                      os.system(command)   
                      endTime = int(round(time.time() * 1000))
