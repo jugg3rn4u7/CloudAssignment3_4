@@ -3,7 +3,7 @@ $(document).ready(function () {
 	var getData = function () {
 
 		var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
-
+		
 		if(selected_option == "1") {
 
 			var isDisabled = $("#cache_query").is('[disabled=disabled]');
