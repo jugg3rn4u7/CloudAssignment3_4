@@ -1,16 +1,28 @@
 $(document).ready(function () {
 
+	$("input[name='sql_query']").change(function(){
+	    var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
+	    var isDisabled = $("#cache_query").is('[disabled=disabled]');
+
+	    if(selected_option == "1") {
+
+			if(isDisabled) {
+				$("#cache_query").removeAttr( "disabled" );
+			}
+
+	    } else {
+
+			if(!isDisabled) {
+				$("#cache_query").attr( "disabled", "disabled" );
+			}
+	    }
+	});
+
 	var getData = function () {
 
 		var selected_option = $('input[name=sql_query]:radio:not(:checked)').val();
 
 		if(selected_option == "1") {
-
-			var isDisabled = $("#cache_query").is('[disabled=disabled]');
-
-			if(isDisabled) {
-				$("#cache_query").removeAttr( "disabled" );
-			}
 
 			var url = '/query?_ts=' + (new Date()).getTime();
 
@@ -36,11 +48,6 @@ $(document).ready(function () {
 
 		} else {
 
-			var isDisabled = $("#cache_query").is('[disabled=disabled]');
-
-			if(!isDisabled) {
-				$("#cache_query").attr( "disabled", "disabled" );
-			}
 
 			var url = '/insert_query?_ts=' + (new Date()).getTime();
 
