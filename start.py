@@ -49,7 +49,7 @@ def create_schema():
         	for i in range(len(attributes)):
         		attr_string += clean_str( attributes[i] ) + " varchar(100),"
         	attr_string = attr_string[:-1]
-        	#print("Attr str : ", attr_string)
+        	print("Attr str : ", attr_string)
         	statement += attr_string
         	statement += ");"
         	return statement
@@ -58,22 +58,22 @@ def create_schema():
         	try:
             		f = []
             		statements = []
-            		for (dirpath, dirnames, filenames) in walk(app.config['PATH']):
+            		for (dirpath, dirnames, filenames) in walk(app.config['DATA']):
                         		f.extend(filenames)
                         		break
             		print("Files : ", f)
             		for i in range(len(f)):
-            			filepath = os.path.join( app.config['PATH'], f[i] )
+            			filepath = os.path.join( app.config['DATA'], f[i] )
             			(filename, ext) = f[i].split(".")
                             	content = []
                             	with open(filepath, 'rb') as f:
-                                		content = [x.strip('\n') for x in f.readlines()]
+                             		content = [x.strip('\n\r') for x in f.readlines()]
             			columns = content[0].split(",")                    		
-            			#print("columns: ", columns)
+            			print("columns: ", columns)
             			statements.append( create_statement(filename, columns) )		
-            		#for i in range(len(statements)):
-            			#print("Table {}".format(i))
-            			#print(statements[i])
+            		for i in range(len(statements)):
+            			print("Table {}".format(i))
+            			print(statements[i])
             		return statements
 
         	except Exception as e:
@@ -107,6 +107,8 @@ def create_schema():
             try:
                     cur = conn.cursor()
                     cur.execute( statement )
+		    #cur.execute("create table cloud_assignments.UNPrecip(Country_or_Territory varchar(100),Station_Name varchar(100),WMO_Station_Number int(11),Unit varchar(100),Jan float(10, 2),Feb float(10, 2),Mar float(10, 2),Apr float(10, 2),May float(10, 2),Jun float(10, 2),Jul float(10, 2),Aug float(10, 2),Sep float(10, 2),Oct float(10, 2),Nov float(10, 2),Decem float(10, 2))")
+
                     conn.commit()
                     cur.close()
             except Exception as e:
@@ -123,7 +125,7 @@ def create_schema():
                          filepath = os.path.join( app.config['DATA'], f[i] )
                          (filename, ext) = f[i].split(".")
                          startTime = int(round(time.time() * 1000))
-                         command = "sudo mysqlimport --ignore-lines=1 --fields-terminated-by=, --local -u root -proot %s " % DB_NAME + "%s" % filepath
+                         command = "sudo mysqlimport --ignore-lines=1 --fields-terminated-by=, --local -u root -proot cloud_assignments %s" % filepath
                          print("command : ", command)
                          os.system(command)   
                          endTime = int(round(time.time() * 1000))
@@ -186,10 +188,22 @@ def RunQuery():
          _id = row[0]
          for i in range(int(times.encode("utf-8"))):
             cur.execute(query)
+	    r_count = cur.rowcount
+	    if r_count == 1:
+		print(cur.fetchone())
+	    else:
+		print(cur.fetchall())
          if cached.encode("utf-8") is "true":
             cur.execute(query)
-            rows = cur.fetchall()
-            memc.set('{}'.format(_id), rows, 60)
+	    r_count = cur.rowcount
+	    if r_count == 1:
+		row = cur.fetchone()
+		print(row)
+		memc.set('{}'.format(_id), row, 60)
+	    else:
+            	rows = cur.fetchall()
+	    	print(rows)
+            	memc.set('{}'.format(_id), rows, 60)
          cur.close()
          conn.close()
          endTime = int(round(time.time() * 1000))
@@ -293,6 +307,6 @@ def UploadFile():
         print e
         return app.send_static_file('index.html')
          
-port = os.getenv('PORT', '8000')
+port = os.getenv('PORT', '8002')
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(port))
